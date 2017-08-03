@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>OAuth2 Github</title>
+</head>
+
+<body>
+    <h1>OAuth2 Github</h1>
+    <form action="https://api.github.com" method="GET">
+        <p>
+            Go to <a href="https://github.com/settings/tokens">
+            https://github.com/settings/tokens</a>, generate a token with repo permission and paste it below:
+        </p>
+        <input type="text" id="oauth-token">
+        <input type="submit" id="oauth-submit">
+    </form>
+    <section id="user"></section>
+    <section id="repos"></section>
+    <script>
+        "use strict";
+
+        // Sample info from Github:
+        // {
+        //     "login": "octocat",
+        //     "id": 1,
+        //     "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+        //     "html_url": "https://github.com/octocat"
+        // }
+        let user = {};
+
+        // Sample info from Github:
+        // {
+        //     "id": 18701620,
+        //     "name": "lxml",
+        //     "html_url": "https://github.com/aitva/lxml",
+        //     "description": "A fast xml generation librairy.",
+        //     "language": "Go",
+        // }
+        let repos = [];
+
+        function display() {
+            let section = document.querySelector("#user");
+            section.innerHTML = `
+                <h2>User</h2>
+                <ul>
+                    <li>${user.login}</li>
+                    <li>${user.avatar_url}</li>
+                    <li>${user.html_url}</li>
+                </ul>`;
+
+            section = document.querySelector("#repos");
+            section.innerHTML = "<h2>Repositories:</h2>";
+            for (let r of repos) {
+                let article = document.createElement("article");
+                article.innerHTML = `
+                    <ul>
+                        <li>${r.name}</li>
+                        <li>${r.description}</li>
+                        <li>${r.language}</li>
+                    </ul>`;
+                section.appendChild(article);
+            }
+        }
+
+        let submit = document.querySelector("#oauth-submit");
+        submit.addEventListener("click", function(e) {
+            e.preventDefault();
+            let token = document.querySelector("#oauth-token").value;
+            fetch("https://api.github.com/user", {
+                headers: {
+                    "Authorization": "token " + token
+                }
+            }).then(function(response) {
+                console.log(response.status);
+                return response.json();
+            }).then(function(json) {
+                user = json;
+                display();
+            });
+            fetch("https://api.github.com/user/repos", {
+                headers: {
+                    "Authorization": "token " + token
+                }
+            }).then(function(response) {
+                console.log(response.status);
+                return response.json();
+            }).then(function(json) {
+                repos = json;
+                display();
+            });
+        });
+    </script>
+</body>
+
+</html>
